@@ -1,0 +1,162 @@
+.\" Manual page for internsctl
+.\" Contact: Tejas Shrivastav <Tejasshrivastav@icloud.com>
+.TH INTERNSCTL 1 "January 2024" "v0.1.0" "internsctl manual page"
+
+.SH NAME
+internsctl \- manage interns and perform system tasks
+
+.SH SYNOPSIS
+.B internsctl
+.RI [ options ] [ command [ arguments ]]
+
+.SH DESCRIPTION
+.B internsctl
+is a command-line tool to manage interns and perform various system-related tasks. It provides functionality for listing interns, adding/removing interns, obtaining CPU and memory information, user management, and file information retrieval.
+
+.SH OPTIONS
+.TP
+.B \-\-version
+Display the version of internsctl.
+
+.TP
+.B \-\-help
+Display this help message.
+
+.SH COMMANDS
+.TP
+.B list
+List all interns.
+
+.TP
+.B add
+Add a new intern.
+
+.TP
+.B remove
+Remove an intern.
+
+.TP
+.B cpu getinfo
+Get CPU information (similar to lscpu).
+
+.TP
+.B memory getinfo
+Get memory information (similar to free).
+
+.TP
+.B user create
+Create a new user who can log in to the system and access their home directory.
+
+.TP
+.B user list
+List all regular users.
+
+.TP
+.B user list \-\-sudo\-only
+List users with sudo permissions.
+
+.TP
+.B file getinfo
+Get information about a file.
+
+.TP
+.B file getinfo [ options ]
+Get specific information about a file.
+
+.SH FILE GETINFO OPTIONS
+.TP
+.B \-\-size, -s
+Print file size.
+
+.TP
+.B \-\-permissions, -p
+Print file permissions.
+
+.TP
+.B \-\-owner, -o
+Print file owner.
+
+.TP
+.B \-\-last-modified, -m
+Print last modified time.
+
+.SH EXAMPLES
+Display examples of common usage.
+
+.B List all interns:
+.RS
+.B internsctl list
+.RE
+
+.B Add a new intern:
+.RS
+.B internsctl add JohnDoe
+.RE
+
+.B Remove an intern:
+.RS
+.B internsctl remove JaneSmith
+.RE
+
+.B Get CPU information:
+.RS
+.B internsctl cpu getinfo
+.RE
+
+.B Get memory information:
+.RS
+.B internsctl memory getinfo
+.RE
+
+.B Create a new user:
+.RS
+.B internsctl user create username
+.RE
+
+.B List all regular users:
+.RS
+.B internsctl user list
+.RE
+
+.B List users with sudo permissions:
+.RS
+.B internsctl user list \-\-sudo-only
+.RE
+
+.B Get information about a file:
+.RS
+.B internsctl file getinfo filename
+.RE
+
+.B Get file size:
+.RS
+.B internsctl file getinfo \-\-size filename
+.RE
+
+.B Get file permissions:
+.RS
+.B internsctl file getinfo \-\-permissions filename
+.RE
+
+.B Get file owner:
+.RS
+.B internsctl file getinfo \-\-owner filename
+.RE
+
+.B Get last modified time of a file:
+.RS
+.B internsctl file getinfo \-\-last-modified filename
+.RE
+
+.SH SEE ALSO
+.BR lscpu (1),
+.BR free (1),
+.BR useradd (8),
+.BR getent (1),
+.BR stat (1)
+
+.SH AUTHOR
+Tejas Shrivastav
+
+.\" End of file
+

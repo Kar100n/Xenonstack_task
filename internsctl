@@ -1,0 +1,227 @@
+#!/bin/bash
+
+VERSION="v0.1.0"
+DATA_FILE="interns.txt"
+
+function display_help {
+    echo "internsctl - $VERSION"
+    echo "Usage: internsctl [options] [command] [arguments]"
+    echo "Options:"
+    echo "  --version          Display the version of internsctl."
+    echo "  --help             Display this help message."
+    echo ""
+    echo "Commands:"
+    echo "  list               List all interns."
+    echo "  add <name>         Add a new intern."
+    echo "  remove <name>      Remove an intern."
+    echo "  cpu getinfo        Get CPU information (similar to lscpu)."
+    echo "  memory getinfo     Get memory information (similar to free)."
+    echo "  user create <username>"
+    echo "                     Create a new user who can log in to the system and access their home directory."
+    echo "  user list          List all regular users."
+    echo "  user list --sudo-only"
+    echo "                     List users with sudo permissions."
+    echo "  file getinfo <file>"
+    echo "                     Get information about a file."
+    echo "  file getinfo [options] <file>"
+    echo "                     Get specific information about a file."
+    echo "Options for 'file getinfo':"
+    echo "  --size, -s         Print file size."
+    echo "  --permissions, -p  Print file permissions."
+    echo "  --owner, -o        Print file owner."
+    echo "  --last-modified, -m"
+    echo "                     Print last modified time."
+}
+
+function list_interns {
+    echo "List of Interns:"
+    cat "$DATA_FILE" 2>/dev/null || echo "No interns found."
+}
+
+function add_intern {
+    name="$1"
+    echo "$name" >> "$DATA_FILE"
+    echo "Intern '$name' added successfully."
+}
+
+function remove_intern {
+    name="$1"
+    if grep -q "^$name$" "$DATA_FILE"; then
+        grep -v "^$name$" "$DATA_FILE" > "$DATA_FILE.tmp" && mv "$DATA_FILE.tmp" "$DATA_FILE"
+        echo "Intern '$name' removed successfully."
+    else
+        echo "Intern '$name' not found."
+    fi
+}
+
+function get_cpu_info {
+    lscpu
+}
+
+function get_memory_info {
+    free
+}
+
+function create_user {
+    username="$1"
+    sudo useradd -m "$username"
+    echo "User '$username' created successfully."
+}
+
+function list_users {
+    getent passwd | cut -d: -f1
+}
+
+function list_sudo_users {
+    grep -Po '^sudo.+:\K.*$' /etc/group | tr ',' '\n'
+}
+
+function get_file_info {
+    file=""
+    size_option=false
+    permissions_option=false
+    owner_option=false
+    last_modified_option=false
+
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            "--size" | "-s")
+                size_option=true
+                ;;
+            "--permissions" | "-p")
+                permissions_option=true
+                ;;
+            "--owner" | "-o")
+                owner_option=true
+                ;;
+            "--last-modified" | "-m")
+                last_modified_option=true
+                ;;
+            *)
+                if [ -z "$file" ]; then
+                    file="$1"
+                else
+                    echo "Unknown option or invalid argument: $1"
+                    display_help
+                    exit 1
+                fi
+                ;;
+        esac
+        shift
+    done
+
+    if [ -z "$file" ]; then
+        echo "Error: File not specified."
+        display_help
+        exit 1
+    fi
+
+    if [ ! -e "$file" ]; then
+        echo "Error: File '$file' not found."
+        exit 1
+    fi
+
+    filename=$(basename "$file")
+    access=$(stat -c "%A" "$file")
+    size=$(stat -c "%s" "$file")
+    owner=$(stat -c "%U" "$file")
+    last_modified=$(stat -c "%y" "$file")
+
+    if $size_option; then
+        echo "File: $filename - Size: $size bytes"
+    elif $permissions_option; then
+        echo "File: $filename - Permissions: $access"
+    elif $owner_option; then
+        echo "File: $filename - Owner: $owner"
+    elif $last_modified_option; then
+        echo "File: $filename - Last Modified: $last_modified"
+    else
+        echo "File: $filename"
+        echo "Access: $access"
+        echo "Size(B): $size"
+        echo "Owner: $owner"
+        echo "Modify: $last_modified"
+    fi
+}
+
+
+# Check if the DATA_FILE exists, if not, create it
+[ -f "$DATA_FILE" ] || touch "$DATA_FILE"
+
+# Main logic
+case "$1" in
+    "--version")
+        echo "internsctl - $VERSION"
+        ;;
+    "--help")
+        display_help
+        ;;
+    "list")
+        list_interns
+        ;;
+    "add")
+        if [ -z "$2" ]; then
+            echo "Error: Please provide the name of the intern to add."
+        else
+            add_intern "$2"
+        fi
+        ;;
+    "remove")
+        if [ -z "$2" ]; then
+            echo "Error: Please provide the name of the intern to remove."
+        else
+            remove_intern "$2"
+        fi
+        ;;
+    "cpu")
+        if [ "$2" == "getinfo" ]; then
+            get_cpu_info
+        else
+            display_help
+            exit 1
+        fi
+        ;;
+    "memory")
+        if [ "$2" == "getinfo" ]; then
+            get_memory_info
+        else
+            display_help
+            exit 1
+        fi
+        ;;
+    "user")
+        case "$2" in
+            "create")
+                if [ -z "$3" ]; then
+                    echo "Error: Please provide the username to create."
+                else
+                    create_user "$3"
+                fi
+                ;;
+            "list")
+                list_users
+                ;;
+            "list" | "--sudo-only")
+                list_sudo_users
+                ;;
+            *)
+                display_help
+                exit 1
+                ;;
+        esac
+        ;;
+    "file")
+        if [ "$2" == "getinfo" ]; then
+            shift 2 # Move to the remaining options
+            get_file_info "$@"
+        else
+            display_help
+            exit 1
+        fi
+        ;;
+    *)
+        echo "Error: Unknown command. Use 'internsctl --help' for usage information."
+        exit 1
+        ;;
+esac
+
